@@ -164,7 +164,21 @@ JOIN customers c  USING (customerid)
 GROUP BY CUBE(s.companyname, p.productname, c.companyname)
 ORDER BY s.companyname NULLS FIRST, p.productname NULLS FIRST, c.companyname NULLS FIRST
 
+-- UNION (removes duplicates) and UNION ALL (keeps duplicates)
+SELECT DISTINCT country FROM customers
+UNION ALL
+SELECT DISTINCT country FROM suppliers
+ORDER BY country
 
+-- INTERSECT (removes duplicates) and INTERSECT ALL (keeps duplicates)
+SELECT COUNT(*) FROM (SELECT city FROM customers
+INTERSECT ALL
+SELECT city FROM suppliers)
 
+-- EXCEPT (keep the items in first query but not second; it is like set subtraction; removes duplicates) and EXCEPT ALL
+-- cities with  a supplier but not customer
+SELECT COUNT(*) FROM (SELECT city FROM suppliers
+EXCEPT
+SELECT city FROM customers)
 
 
