@@ -182,3 +182,46 @@ EXCEPT
 SELECT city FROM customers)
 
 
+-- Sub-queries
+-- EXISTS (find all products that cost more than 200$ per unit)
+SELECT s.supplierid, s.companyname
+FROM suppliers s
+WHERE EXISTS(SELECT productid 
+			FROM products p
+			WHERE s.supplierid=p.supplierid
+			AND unitprice > 200)
+
+-- using NOT EXISTS find all suppliers who do not have an order in 1996 December.
+SELECT s.supplierid, s.companyname
+FROM suppliers s
+WHERE NOT EXISTS(SELECT orderid 
+			FROM order_details
+			JOIN products USING (productid)
+			JOIN orders USING (orderid)
+			WHERE s.supplierid=supplierid
+			AND orders.orderdate BETWEEN '1996-12-01' AND '1996-12-31')
+
+-- ANY, ALL, IN
+-- find all the suppliers that have orders with 1 item
+SELECT s.supplierid, s.companyname
+FROM suppliers s
+WHERE s.supplierid = ANY(SELECT supplierid 
+			FROM order_details
+			JOIN products USING (productid)
+			WHERE quantity = 1);
+-- find all customers that ordered more in one item than the average order amount per item of all customers
+SELECT DISTINCT companyname
+FROM customers
+JOIN orders USING (customerid)
+JOIN order_details USING (orderid)
+WHERE unitprice*quantity > ALL (SELECT AVG(unitprice*quantity)
+								FROM  order_details 
+								JOIN orders USING (orderid)
+								GROUP BY customerid);
+-- find all the suppliers that are in the same city as that of a customer
+SELECT companyname
+FROM suppliers
+WHERE city IN (SELECT city FROM customers)
+ORDER BY companyname;
+
+
