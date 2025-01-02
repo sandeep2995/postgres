@@ -91,3 +91,80 @@ NATURAL JOIN orders
 NATURAL JOIN customers;
 
 
+-- AGGREGATION and GROUPING
+-- GROUP BY (total value of the each product sold in the year 1997)
+SELECT productid, productname, round(SUM(order_details.unitprice*quantity))
+FROM products
+JOIN order_details USING(productid)
+JOIN orders USING(orderid)
+WHERE orderdate BETWEEN '1997-01-01' AND '1997-12-31'
+GROUP BY productid
+ORDER BY SUM(order_details.unitprice*quantity) DESC
+
+-- HAVING filters the records after grouping, while WHERE filters them before grouping
+-- customers who bought products worth of more than 5000
+SELECT customerid, companyname, round(SUM(order_details.unitprice*quantity)) AS product_value
+FROM customers
+JOIN orders USING (customerid)
+JOIN order_details USING (orderid)
+GROUP BY customerid
+HAVING SUM(order_details.unitprice*quantity) > 5000  -- cannot use column alias here
+ORDER BY product_value DESC;
+
+-- customers who bought products worth of more than 5000 in the first six months of 1997
+SELECT customerid, companyname, round(SUM(order_details.unitprice*quantity)) AS product_value
+FROM customers
+JOIN orders USING (customerid)
+JOIN order_details USING (orderid)
+WHERE orderdate BETWEEN '1997-01-01' AND '1997-06-30'
+GROUP BY customerid
+HAVING SUM(order_details.unitprice*quantity) > 5000
+ORDER BY product_value DESC;
+
+-- GROUPING SETS (group by multiple sets of columns)
+-- total sales by customer's company name and supplier's company name
+SELECT customers.companyname AS buyer, suppliers.companyname AS supplier, SUM(order_details.unitprice*quantity) AS total_sales
+FROM order_details
+NATURAL JOIN orders
+JOIN customers USING (customerid)
+JOIN products USING (productid)
+JOIN suppliers USING (supplierid)
+GROUP BY GROUPING SETS ((buyer), (buyer, supplier))
+-- GROUP BY buyer, supplier
+ORDER BY buyer, supplier;
+
+-- total sales grouped by company name and category name (print NULLS FIRST)
+SELECT companyname, categoryname, SUM(order_details.unitprice*quantity)
+FROM order_details
+JOIN orders USING (orderid)
+JOIN customers USING (customerid)
+JOIN products USING (productid)
+JOIN categories USING (categoryid)
+GROUP BY GROUPING SETS ((companyname), (companyname, categoryname))
+ORDER BY companyname, categoryname NULLS FIRST;
+
+-- ROLLUP (equivalent to performing GROUPING SETS on all the given columns, with one reduced at a time, from right to left)
+-- do rollup of suppliers, products and customers
+SELECT s.companyname supplier, p.productname, c.companyname buyer, round(SUM(o.unitprice*quantity)) total_amount
+FROM suppliers s
+JOIN products p USING (supplierid)
+JOIN order_details o USING (productid)
+JOIN orders USING (orderid)
+JOIN customers c  USING (customerid)
+GROUP BY ROLLUP(s.companyname, p.productname, c.companyname)
+ORDER BY s.companyname, p.productname, c.companyname
+
+-- CUBE (equivalent to performing GROUPING SETS on all subsets of given columns)
+SELECT s.companyname supplier, p.productname, c.companyname buyer, round(SUM(o.unitprice*quantity)) total_amount
+FROM suppliers s
+JOIN products p USING (supplierid)
+JOIN order_details o USING (productid)
+JOIN orders USING (orderid)
+JOIN customers c  USING (customerid)
+GROUP BY CUBE(s.companyname, p.productname, c.companyname)
+ORDER BY s.companyname NULLS FIRST, p.productname NULLS FIRST, c.companyname NULLS FIRST
+
+
+
+
+
