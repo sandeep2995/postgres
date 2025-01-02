@@ -225,3 +225,45 @@ WHERE city IN (SELECT city FROM customers)
 ORDER BY companyname;
 
 
+-- Data modification in tables
+-- INSERT INTO
+INSERT INTO order_details(orderid, productid, unitprice, quantity, discount)
+VALUES(11078, 11,14,20,0);
+
+-- UPDATE
+UPDATE order_details
+SET quantity=40, discount=0.05
+WHERE orderid=11078;
+
+-- DELETE
+DELETE FROM order_details
+WHERE orderid=11078 AND productid=11;
+DELETE FROM orders
+WHERE orderid=11078 AND customerid='VINET';
+
+-- SELECT INTO
+DELETE FROM order_details
+WHERE orderid=11078 AND productid=11;
+DELETE FROM orders
+WHERE orderid=11078 AND customerid='VINET';
+
+-- INSERT INTO SELECT
+INSERT INTO orders_1997
+SELECT * FROM orders
+WHERE orderdate BETWEEN '1996-12-01' AND '1996-12-31';
+
+-- RETURNING data from INSERT, UPDATE and DELETE
+INSERT INTO orders_1997(orderid, customerid, employeeid, requireddate, shippeddate)
+VALUES(500, 'VINET', 5, '1996-08-01', '1996-08-10')
+RETURNING orderid;
+
+UPDATE order_details
+SET quantity=2*quantity
+WHERE orderid=10248 AND productid=11
+RETURNING quantity as new_quantity;
+
+DELETE FROM orders_1997
+WHERE orderid=500
+RETURNING *;
+
+
