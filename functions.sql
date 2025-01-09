@@ -99,3 +99,50 @@ SELECT (square_n_cube()).cube;
 SELECT productname, companyname 
 FROM highest_inventory() AS high_inventory_prodid
 JOIN suppliers ON supplierid(high_inventory_prodid) = suppliers.supplierid;
+
+-- FUNCTIONs that RETURN more than one row
+-- RETURNS SETOF <table_name>
+-- function returning all the products that need to be ordered. That is, units in hand + units ordered < reorder level)
+DROP FUNCTION IF EXISTS suppliers_to_reorder_from();
+CREATE OR REPLACE FUNCTION suppliers_to_reorder_from() 
+RETURNS SETOF suppliers AS $$
+	SELECT * 
+	FROM suppliers
+	WHERE supplierid IN
+		(SELECT supplierid 
+		FROM products
+		WHERE unitsinstock+unitsonorder < reorderlevel);
+$$ LANGUAGE SQL;
+
+SELECT (suppliers_to_reorder_from()).*;
+SELECT * FROM suppliers_to_reorder_from();
+
+-- RETURNS TABLE()
+-- create a function that returns excess inventory based on percent of inventory threshold
+DROP FUNCTION IF EXISTS thresholded_excess_inventory;
+SELECT unitsinstock, unitsonorder, reorderlevel FROM products;
+CREATE OR REPLACE FUNCTION thresholded_excess_inventory(inventory_threshold int)
+RETURNS TABLE(productid smallint, productname varchar(40), excess_unitsinstock smallint) AS $$
+	SELECT productid, productname, 
+		CEIL((unitsinstock + unitsonorder) - (reorderlevel*inventory_threshold/100))::smallint AS excess_unitsinstock
+	FROM products
+	WHERE (unitsinstock + unitsonorder) > reorderlevel*inventory_threshold/100
+$$ LANGUAGE SQL;
+
+SELECT * FROM thresholded_excess_inventory(130);
+
+
+-- PROCEDUREs: FUNCTIONs that do not return anything; execute them using CALL
+-- create a procedure to increase the unitprices in products table for the given supplierid by given amount
+SELECT supplierid, productname, unitprice FROM products WHERE supplierid = 20;
+DROP FUNCTION IF EXISTS change_supplier_prices;
+CREATE OR REPLACE PROCEDURE change_supplier_prices(supplierid smallint, amount real) AS $$
+	UPDATE products
+	SET unitprice = unitprice + amount
+	WHERE supplierid = $1
+$$ LANGUAGE SQL;
+
+CALL change_supplier_prices(20::smallint, .50);  -- CALLing a procedure is different from function
+
+SELECT supplierid, productname, unitprice FROM products WHERE supplierid = 20;
+
