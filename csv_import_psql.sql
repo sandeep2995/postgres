@@ -14,3 +14,38 @@ CREATE TABLE airport_frequencies(
 
 SELECT * FROM airport_frequencies LIMIT 10;
 
+CREATE DATABASE airport;
+
+CREATE TABLE airports (
+	id int NOT NULL,
+	ident varchar(10),
+	type text,
+	name text,
+	latitude_deg float,
+	longitude_deg float,
+	elevation_ft int,
+	continent text,
+	iso_country varchar(10),
+	iso_region varchar(10),
+	municipality text,
+	scheduled_service text,
+	gps_code varchar(10),
+	iata_code varchar(20),
+	local_code varchar(20),
+	home_link text,
+	wikipedia_link text,
+	keywords text
+);
+
+-- this won't work in pgAdmin (even in the psql tool inside the pgadmin)
+COPY airports (id,ident,type,name,latitude_deg,longitude_deg,elevation_ft,
+				continent,iso_country,iso_region,municipality,scheduled_service,
+				gps_code,iata_code,local_code,home_link,wikipedia_link,keywords)
+FROM '/Users/vidyapus/Desktop/projects/postgres/materials/csv_files/airports.csv' DELIMITER ',' CSV HEADER;
+
+-- execute the following on the terminal (NOTE: not in the pgadmin)
+\copy airports (id,ident,type,name,latitude_deg,longitude_deg,elevation_ft,
+				continent,iso_country,iso_region,municipality,scheduled_service,
+				gps_code,iata_code,local_code,home_link,wikipedia_link,keywords)
+FROM '/Users/vidyapus/Desktop/projects/postgres/materials/csv_files/airports.csv' DELIMITER ',' CSV HEADER;
+
